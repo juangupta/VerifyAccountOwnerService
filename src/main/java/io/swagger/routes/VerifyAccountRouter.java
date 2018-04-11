@@ -12,10 +12,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.model.JsonApiBody;
+import io.swagger.model.client.JsonApiResponse;
 
 
 @Component
 public class VerifyAccountRouter extends RouteBuilder {
+	
+	static final String ACCEPT = "Accept";
 	
 	
 	@Override
@@ -23,10 +26,14 @@ public class VerifyAccountRouter extends RouteBuilder {
         from("direct:validateChannel")
 	        .marshal().json(JsonLibrary.Jackson)
 	        .log("Route validateChannel: Before send POST Request")
+	        .log("Route validateChannel: Body Request ${body}")
 	        .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-	        .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-	    .to("https://postman-echo.com/post")
-	        .log("Route validateChannel: After send POST Request");
+	        .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))	        
+	        .setHeader(this.ACCEPT, constant("application/json"))
+	    .to("http://localhost:8081/test/ValidateChannel")
+	    	.unmarshal().json(JsonLibrary.Jackson, JsonApiResponse.class)
+	        .log("Route validateChannel: After send POST Request")
+        	.log("Route validateChannel: Body Response ${body}");
         //.to("direct:writeToLog")
         //.log("After call to direct");
         

@@ -4,6 +4,11 @@ import io.swagger.model.JsonApiBody;
 import io.swagger.model.VerifyAccountError;
 import io.swagger.model.VerifyAccountRequest;
 import io.swagger.model.VerifyAccountResponse;
+import io.swagger.model.client.AttributesRequest;
+import io.swagger.model.client.JsonApiRequest;
+import io.swagger.model.client.JsonApiResponse;
+import io.swagger.model.client.ValidateChannelRequest;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.*;
 
@@ -11,6 +16,7 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.FluentProducerTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -26,6 +32,7 @@ import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-04-02T20:16:10.917Z")
 
@@ -37,6 +44,9 @@ public class VerifyAccountOwnerApiController implements VerifyAccountOwnerApi {
     private final ObjectMapper objectMapper;
 
     private final HttpServletRequest request;
+    
+    //@Value("${attr.type.transaction}")
+    private static final String TYPE_TRANSACTION = "transaction";
     
     @EndpointInject(uri = "direct:validateChannel")
     private FluentProducerTemplate producerTemplate;
@@ -50,12 +60,36 @@ public class VerifyAccountOwnerApiController implements VerifyAccountOwnerApi {
     public ResponseEntity<VerifyAccountResponse> verifyAccountOwner(@ApiParam(value = "" ,required=true )  @Valid @RequestBody JsonApiBody body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
-            String out = producerTemplate.withBody(body).request(String.class);
-			System.out.println(out);
+        	VerifyAccountRequest verifyAccountRequest = new VerifyAccountRequest();
+        	verifyAccountRequest = body.getData().get(0);
+        	
+        	//Bloque Attributes Transaction
+        	AttributesRequest atributesTransactionRq = new AttributesRequest();
+        	atributesTransactionRq.setTransactionDate(verifyAccountRequest.getTransactionDate());
+        	atributesTransactionRq.setClientIp(verifyAccountRequest.getClientIp());
+        	atributesTransactionRq.setClientIp(verifyAccountRequest.getClientIp());
+        	atributesTransactionRq.setChannelId(verifyAccountRequest.getChannelId());
+        	atributesTransactionRq.setConsumerId(verifyAccountRequest.getConsumerId());
+        	
+        	//Bloque Body Transaction
+        	ValidateChannelRequest validateChannelRqTransaction = new ValidateChannelRequest();
+        	validateChannelRqTransaction.setAttributes(atributesTransactionRq);
+        	validateChannelRqTransaction.setId(verifyAccountRequest.getHeader().getId());
+        	validateChannelRqTransaction.setType(TYPE_TRANSACTION);
+        	
+        	List<ValidateChannelRequest> validateChannelData = new ArrayList<ValidateChannelRequest>();
+        	validateChannelData.add(validateChannelRqTransaction);      	
+        	
+        	JsonApiRequest jsonApiRq = new JsonApiRequest();
+        	jsonApiRq.setData(validateChannelData);
+        	System.out.println("Before Response.......");
+            
+        	JsonApiResponse channelServiceResponse = producerTemplate.withBody(jsonApiRq).request(JsonApiResponse.class);
+        	System.out.println("Response.......");
+            System.out.println(channelServiceResponse.getData().get(0).getId());
             VerifyAccountResponse response = new VerifyAccountResponse();
-            VerifyAccountRequest data = body.getData().get(0);
-            response.setHeader(data.getHeader());
-            response.setMessageId(data.getMessageId());
+            response.setHeader(verifyAccountRequest.getHeader());
+            response.setMessageId(verifyAccountRequest.getMessageId());
             response.setOwnerAccountName("Juan G Gomez Isaza");
             response.setTransactionDate(new Timestamp(System.currentTimeMillis()).toString());
 			return new ResponseEntity<VerifyAccountResponse>(response, HttpStatus.OK);
