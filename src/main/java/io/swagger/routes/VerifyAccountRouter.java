@@ -24,8 +24,9 @@ public class VerifyAccountRouter extends RouteBuilder {
 	@Override
     public void configure() throws Exception {
         from("direct:validateChannel")
-	        .marshal().json(JsonLibrary.Jackson)
-	        .log("Route validateChannel: Before send POST Request")
+	        //.marshal().json(JsonLibrary.Jackson)
+        .to("freemarker:FreemarkerTemplates/ChannelServiceRq.ftl")    
+        	.log("Route validateChannel: Before send POST Request")
 	        .log("Route validateChannel: Body Request ${body}")
 	        .setHeader(Exchange.HTTP_METHOD, constant("POST"))
 	        .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))	        

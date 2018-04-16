@@ -63,28 +63,9 @@ public class VerifyAccountOwnerApiController implements VerifyAccountOwnerApi {
         	VerifyAccountRequest verifyAccountRequest = new VerifyAccountRequest();
         	verifyAccountRequest = body.getData().get(0);
         	
-        	//Bloque Attributes Transaction
-        	AttributesRequest atributesTransactionRq = new AttributesRequest();
-        	atributesTransactionRq.setTransactionDate(verifyAccountRequest.getTransactionDate());
-        	atributesTransactionRq.setClientIp(verifyAccountRequest.getClientIp());
-        	atributesTransactionRq.setClientIp(verifyAccountRequest.getClientIp());
-        	atributesTransactionRq.setChannelId(verifyAccountRequest.getChannelId());
-        	atributesTransactionRq.setConsumerId(verifyAccountRequest.getConsumerId());
-        	
-        	//Bloque Body Transaction
-        	ValidateChannelRequest validateChannelRqTransaction = new ValidateChannelRequest();
-        	validateChannelRqTransaction.setAttributes(atributesTransactionRq);
-        	validateChannelRqTransaction.setId(verifyAccountRequest.getHeader().getId());
-        	validateChannelRqTransaction.setType(TYPE_TRANSACTION);
-        	
-        	List<ValidateChannelRequest> validateChannelData = new ArrayList<ValidateChannelRequest>();
-        	validateChannelData.add(validateChannelRqTransaction);      	
-        	
-        	JsonApiRequest jsonApiRq = new JsonApiRequest();
-        	jsonApiRq.setData(validateChannelData);
         	System.out.println("Before Response.......");
             
-        	JsonApiResponse channelServiceResponse = producerTemplate.withBody(jsonApiRq).request(JsonApiResponse.class);
+        	JsonApiResponse channelServiceResponse = producerTemplate.withBody(verifyAccountRequest).request(JsonApiResponse.class);
         	System.out.println("Response.......");
             System.out.println(channelServiceResponse.getData().get(0).getId());
             VerifyAccountResponse response = new VerifyAccountResponse();
